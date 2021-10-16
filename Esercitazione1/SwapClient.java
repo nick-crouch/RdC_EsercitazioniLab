@@ -31,7 +31,6 @@ public class SwapClient {
             ByteArrayOutputStream boStream = null;
             DataOutputStream doStream = null;
             byte[] data = null;
-            int numLinea = -1;
             String richiesta = null;
             String risposta = null;
             ByteArrayInputStream biStream = null;
@@ -174,8 +173,9 @@ public class SwapClient {
                 biStream = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
                 diStream = new DataInputStream(biStream);
                 esito = Integer.parseInt(diStream.readUTF());
+                
                 //controllo sull'esito
-                if(esito){
+                if(esito> 0){
                     System.out.println("Risposta: " + esito);
 
                 }
