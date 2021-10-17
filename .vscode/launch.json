@@ -1,0 +1,37 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+       
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Launch DiscoveryServer",
+            "request": "launch",
+            "mainClass": "DiscoveryServer",
+            "args": "4200 file0.txt 4201 file1.txt 4202",
+            "projectName": "Rdc_EsercitazioniLab-1_28b27862"
+        },
+        {
+            "type": "java",
+            "name": "Launch LineServer",
+            "request": "launch",
+            "mainClass": "LineServer",
+            "projectName": "Rdc_EsercitazioniLab-1_28b27862"
+        },
+        {
+            "type": "java",
+            "name": "Launch SwapClient",
+            "request": "launch",
+            "mainClass": "SwapClient",
+            "projectName": "Rdc_EsercitazioniLab-1_28b27862"
+        }
+    ]
+}
