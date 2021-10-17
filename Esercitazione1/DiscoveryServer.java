@@ -53,11 +53,11 @@ public class DiscoveryServer {
         try {
             for(int i = 0; i < k; i++){
                 //  Run di tutti i thread associati ai files
-                RSServers[i] = new RowSwapServer(files[i], new DatagramSocket(ports[i]));
+                RSServers[i] = new RowSwapServer(files[i], ports[i]);
                 RSServers[i].start();
                 System.out.println("RSServer #" + i + ": avviato su porta " + ports[i] +" con file " + files[i]);
             }
-        } catch (SocketException s) {
+        } catch (Exception s) {
             System.out.println("Errore Socket");
         }
        
@@ -129,13 +129,14 @@ public class DiscoveryServer {
                     doStream = new DataOutputStream(boStream);
                     if(found){
                         //  Comunico al cliente la porta del RSServer
-                        doStream.writeInt(ports[i]);
+                        System.out.println(ports[i-1]);
+                        doStream.writeUTF(Integer.toString(ports[i-1]));
                         data = boStream.toByteArray();
                         packet.setData(data, 0, data.length);
                         socket.send(packet);
                     }else{
                         //  Comunico al cliente che non ho trovato la porta tramite l'intero -1
-                        doStream.writeInt(-1);
+                        doStream.writeUTF(String.valueOf(-1));
                         data = boStream.toByteArray();
                         packet.setData(data, 0, data.length);
                         socket.send(packet);

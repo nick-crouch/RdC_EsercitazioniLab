@@ -14,7 +14,7 @@ public class SwapClient {
         // creazione della socket datagram, settaggio timeout di 30s
         // e creazione datagram packet
         try {
-            socket = new DatagramSocket(port, inetAddress);
+            socket = new DatagramSocket();
             socket.setSoTimeout(30000);
             packet = new DatagramPacket(buf, buf.length, inetAddress, port);
             System.out.println("\nSwapClient: avviato");
@@ -45,7 +45,7 @@ public class SwapClient {
                     data = boStream.toByteArray();
                     packet.setData(data);
                     socket.send(packet);
-                    System.out.println("Richiesta inviata a " + inetAddress + ", " + port);
+                    System.out.println("Richiesta inviata a " + inetAddress + ":" + port);
                 } catch (IOException e) {
                     System.out.println("Problemi nell'invio della richiesta: ");
                     e.printStackTrace();
@@ -87,6 +87,7 @@ public class SwapClient {
                     e.printStackTrace();
                     // il client continua l'esecuzione riprendendo dall'inizio del ciclo
                 }
+
                 catch(NumberFormatException nbe){
                     System.out.println("Problemi nella porta: ");
                     nbe.printStackTrace();
@@ -97,9 +98,9 @@ public class SwapClient {
 
             //creazione socket con RS Server
             try {
-                socket = new DatagramSocket(portRS,inetAddress);
+                socket = new DatagramSocket();
                 socket.setSoTimeout(30000);
-                packet = new DatagramPacket(buf, buf.length, inetAddress, port);
+                packet = new DatagramPacket(buf, buf.length, inetAddress, portRS);
                 System.out.println("\nSwapClient: avviato");
                 System.out.println("Creata la socket: " + socket);
             } catch (SocketException e) {
@@ -131,6 +132,20 @@ public class SwapClient {
 
             //creazione pacchetto con i due numeri di riga da inviare a RS Server
             // invio pacchetto a RS Server
+            DatagramPacket packetRS = null;
+            DatagramSocket socketRS =null;
+            try {
+                socketRS = new DatagramSocket();
+                socketRS.setSoTimeout(30000);
+                packetRS = new DatagramPacket(buf, buf.length, inetAddress, portRS);
+                System.out.println("\nRSS interrogato");
+                System.out.println("Creata la socket: " + socketRS);
+            } catch (SocketException e) {
+                System.out.println("Problemi nella creazione della socket: ");
+                e.printStackTrace();
+                System.out.println("SwapClient: interrompo...");
+                System.exit(1);
+            }
             richiesta = linea1 +" "+linea2;
 
             try {
@@ -138,9 +153,9 @@ public class SwapClient {
                 doStream = new DataOutputStream(boStream);
                 doStream.writeUTF(richiesta);
                 data = boStream.toByteArray();
-                packet.setData(data);
-                socket.send(packet);
-                System.out.println("Richiesta inviata a " + inetAddress + ", " + port);
+                packetRS.setData(data);
+                socketRS.send(packetRS);
+                System.out.println("Richiesta inviata a " + inetAddress + ":" + portRS);
             } catch (IOException e) {
                 System.out.println("Problemi nell'invio della richiesta: ");
                 e.printStackTrace();
@@ -156,8 +171,8 @@ public class SwapClient {
             int esito=-1;
             try {
                 // settaggio del buffer di ricezione
-                packet.setData(buf);
-                socket.receive(packet);
+                packetRS.setData(buf);
+                socketRS.receive(packetRS);
                 // sospensiva solo per i millisecondi indicati, dopodich� solleva una
                 // SocketException
             } catch (IOException e) {
@@ -170,7 +185,7 @@ public class SwapClient {
 
             //ricezione risposta --> inserisco in esito la risposta
             try {
-                biStream = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
+                biStream = new ByteArrayInputStream(packetRS.getData(), 0, packetRS.getLength());
                 diStream = new DataInputStream(biStream);
                 esito = Integer.parseInt(diStream.readUTF());
                 
@@ -178,10 +193,6 @@ public class SwapClient {
                 if(esito> 0){
                     System.out.println("Risposta: " + esito);
 
-                }
-                portRS=Integer.parseInt(risposta);
-                if(portRS<=1024 || portRS>65535){
-                    System.out.println("Errore porta");
                 }
             } catch (IOException e) {
                 System.out.println("Problemi nella lettura della risposta: ");
