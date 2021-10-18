@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
-
+import java.util.Arrays;
 
 
 public class DiscoveryServer {
@@ -47,6 +47,15 @@ public class DiscoveryServer {
         // k == numCoppie
 
         //  TODO Controllo che tutti file e le porte siano diversi
+        if(errorePorte(ports)) {
+            System.out.println("Le porte devono essere distinte");
+            System.exit(1);
+        }
+
+        if(erroreFiles(files)) {
+            System.out.println("I file devono essere distinti");
+            System.exit(1);
+        }
 
         //  Creazione k RowSwapServers
         RowSwapServer RSServers[] = new RowSwapServer[k];
@@ -130,7 +139,7 @@ public class DiscoveryServer {
                     if(found){
                         //  Comunico al cliente la porta del RSServer
                         System.out.println(ports[i-1]);
-                        doStream.writeUTF(Integer.toString(ports[i-1]));
+                        doStream.writeInt(ports[i-1]);
                         data = boStream.toByteArray();
                         packet.setData(data, 0, data.length);
                         socket.send(packet);
@@ -162,6 +171,32 @@ public class DiscoveryServer {
 		System.out.println("LineServer: termino...");
 		socket.close();
 	}
-        
-    
+
+    private static boolean errorePorte(int[] ports) {
+        boolean isErrore=false;
+        int[] copyPorts=Arrays.copyOf(ports,ports.length);
+        Arrays.sort(copyPorts);
+        for(int i = 1; i< copyPorts.length; i++){
+            if(copyPorts[i]== copyPorts[i-1] || copyPorts[i]<=1024 || copyPorts[i]>65535){
+                isErrore= true;
+                return isErrore;
+            }
+        }
+        return isErrore;
+    }
+
+    private static boolean erroreFiles(String[] files) {
+        boolean isErrore=false;
+        String[] copyFiles=Arrays.copyOf(files,files.length);
+        Arrays.sort(files);
+        for(int i = 1; i< copyFiles.length; i++){
+            if(copyFiles[i]== copyFiles[i-1] ){
+                isErrore= true;
+                return isErrore;
+            }
+        }
+        return isErrore;
+    }
+
+
 }

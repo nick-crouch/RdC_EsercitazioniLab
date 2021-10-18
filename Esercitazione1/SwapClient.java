@@ -76,9 +76,8 @@ public class SwapClient {
                 try {
                     biStream = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
                     diStream = new DataInputStream(biStream);
-                    risposta = diStream.readUTF();
-                    System.out.println("Risposta: " + risposta);
-                    portRS=Integer.parseInt(risposta);
+                    portRS =diStream.readInt();
+                    System.out.println("Risposta: " + portRS);
                     if(portRS<=1024 || portRS>65535){
                         System.out.println("Errore porta");
                     }
@@ -97,18 +96,9 @@ public class SwapClient {
 
 
             //creazione socket con RS Server
-            try {
-                socket = new DatagramSocket();
-                socket.setSoTimeout(30000);
-                packet = new DatagramPacket(buf, buf.length, inetAddress, portRS);
-                System.out.println("\nSwapClient: avviato");
-                System.out.println("Creata la socket: " + socket);
-            } catch (SocketException e) {
-                System.out.println("Problemi nella creazione della socket: ");
-                e.printStackTrace();
-                System.out.println("SwapClient: interrompo...");
-                System.exit(1);
-            }
+
+            DatagramPacket packetRS = null;
+            DatagramSocket socketRS =null;
             //
 
 
@@ -132,8 +122,6 @@ public class SwapClient {
 
             //creazione pacchetto con i due numeri di riga da inviare a RS Server
             // invio pacchetto a RS Server
-            DatagramPacket packetRS = null;
-            DatagramSocket socketRS =null;
             try {
                 socketRS = new DatagramSocket();
                 socketRS.setSoTimeout(30000);
@@ -147,6 +135,7 @@ public class SwapClient {
                 System.exit(1);
             }
             richiesta = linea1 +" "+linea2;
+            data=null;
 
             try {
                 boStream = new ByteArrayOutputStream();
@@ -187,7 +176,7 @@ public class SwapClient {
             try {
                 biStream = new ByteArrayInputStream(packetRS.getData(), 0, packetRS.getLength());
                 diStream = new DataInputStream(biStream);
-                esito = Integer.parseInt(diStream.readUTF());
+                esito = diStream.readInt();
                 
                 //controllo sull'esito
                 if(esito> 0){
