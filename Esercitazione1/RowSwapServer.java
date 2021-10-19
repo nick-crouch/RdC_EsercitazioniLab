@@ -28,7 +28,7 @@ public class RowSwapServer extends Thread {
             InetAddress clientAddress = null;
             byte[] data = null;
             String richiesta = null;
-            String fileOut="output.txt";
+            String fileOut=nomeFile;
             while (true) {
                 try {
                     data = new byte[256];
