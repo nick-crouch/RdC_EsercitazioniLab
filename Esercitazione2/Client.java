@@ -88,8 +88,7 @@ public class Client {
                 }else{
                     try{
                         outSock.writeUTF(f.getName());
-                        outSock.writeLong(f.length());
-                        System.out.println("Inviato il nome del file " + f.getName() + " di dimensioni: " + f.length());
+                        System.out.println("Inviato il nome del file " + f.getName());
                     }
                     catch(Exception e){
                         System.out.println("Problemi nell'invio del nome di " + f.getName()
@@ -108,6 +107,7 @@ public class Client {
                             try{
                                 //  Invio file
                                 outFile = new FileInputStream(f.getName());
+                                outSock.writeLong(f.length());
                                 FileUtility.trasferisci_a_byte_file_binario(new DataInputStream(outFile), outSock);
                                 outFile.close();
                                 
