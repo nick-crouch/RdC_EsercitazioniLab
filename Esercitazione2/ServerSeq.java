@@ -99,7 +99,6 @@ public class ServerSeq {
 					clientSocket.close();
 					System.out
                     .print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
-					// il client continua l'esecuzione riprendendo dall'inizio del ciclo
 					continue;          
 				}
 				catch (IOException e) {
@@ -115,6 +114,7 @@ public class ServerSeq {
                     if(nomeFile.equals(f.getName())){
                         System.out.println("Il file e' gia' presente nel direttorio");
                         outSock.writeUTF("Salta File");
+
                     }else{
                         continue;
                     }
