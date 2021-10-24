@@ -134,45 +134,47 @@ public class ServerSeq {
                     }
                     outSock.writeUTF("Attiva");
                     outFile = new FileOutputStream(nomeFile);
-                }
 
-                long sizeFile;
-            // ricezione del file e dimensione
-                try {
-                    // ricezione dimensione
-                    sizeFile = Long.parseLong(inSock.readUTF());
+                    long sizeFile;
+                    // ricezione del file e dimensione
+                    try {
+                        // ricezione dimensione
+                        sizeFile = Long.parseLong(inSock.readUTF());
 
 
-                    System.out.println("Ricevo il file " + nomeFile + ": [" + sizeFile + "] \n");
-                    /**NOTA: la funzione consuma l'EOF*/
-                    FileUtility.trasferisci_a_byte_file_binario(inSock,
-                            new DataOutputStream(outFile));
-                    System.out.println("\nRicezione del file " + nomeFile
-                            + " terminata\n");
-                    outFile.close();				// chiusura file
-                    clientSocket.shutdownInput();	//chiusura socket (downstream)
-                    // ritorno esito positivo al client
-                    outSock.writeUTF( "File salvato lato server");
-                    clientSocket.shutdownOutput();	//chiusura socket (upstream)
-                    System.out.println("\nTerminata connessione con " + clientSocket);
-                    clientSocket.close();
-                }
-                catch(SocketTimeoutException ste){
-                    System.out.println("Timeout scattato: ");
-                    ste.printStackTrace();
-                    clientSocket.close();
-                    System.out
-                            .print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
-                    continue;
-                }
-                catch (Exception e) {
-                    System.err
-                            .println("\nProblemi durante la ricezione e scrittura del file: "
-                                    + e.getMessage());
-                    e.printStackTrace();
-                    clientSocket.close();
-                    System.out.println("Terminata connessione con " + clientSocket);
-                    continue;
+                        System.out.println("Ricevo il file " + nomeFile + ": [" + sizeFile + " bytes] \n");
+                        /**NOTA: la funzione consuma l'EOF*/
+                        FileUtility.trasferisci_a_byte_file_binario(inSock,
+                                new DataOutputStream(outFile));
+                        System.out.println("\nRicezione del file " + nomeFile
+                                + " terminata\n");
+                        outFile.close();				// chiusura file
+                        clientSocket.shutdownInput();	//chiusura socket (downstream)
+                        // ritorno esito positivo al client
+                        outSock.writeUTF( "File salvato lato server");
+                        clientSocket.shutdownOutput();	//chiusura socket (upstream)
+                        System.out.println("\nTerminata connessione con " + clientSocket);
+                        clientSocket.close();
+                    }
+                    catch(SocketTimeoutException ste){
+                        System.out.println("Timeout scattato: ");
+                        ste.printStackTrace();
+                        clientSocket.close();
+                        System.out
+                                .print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
+                        continue;
+                    }
+                    catch (Exception e) {
+                        System.err
+                                .println("\nProblemi durante la ricezione e scrittura del file: "
+                                        + e.getMessage());
+                        e.printStackTrace();
+                        clientSocket.close();
+                        System.out.println("Terminata connessione con " + clientSocket);
+                        continue;
+                    }
+
+
                 }
 
 
