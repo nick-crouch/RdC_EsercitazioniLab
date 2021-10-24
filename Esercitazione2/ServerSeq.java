@@ -3,7 +3,7 @@ import java.io.*;
 import java.net.*;
 
 public class ServerSeq {
-    public static final int PORT = 54321; // porta default per server
+    public static final int PORT = 8040; // porta default per server
     public static void main(String [] args){
         int port = -1;
         String workingDirectory = System.getProperty("user.dir");
