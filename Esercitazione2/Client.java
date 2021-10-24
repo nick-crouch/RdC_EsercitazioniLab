@@ -99,6 +99,8 @@ public class Client {
             String esito;
             for (File f : new File(direttorio).listFiles()) {
                 if(f.isDirectory()){
+                    //  TODO rimuovere questa println di debug
+                    System.out.println("Saltato il direttorio: " + f.getName());
                     continue;
                     // se il file è un direttorio, passo al file successivo
                 }
