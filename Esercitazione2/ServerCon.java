@@ -12,9 +12,10 @@ class ServerConThread extends Thread{
 	}
 
     public void run(){
-        DataInputStream inSock;
+        
+		DataInputStream inSock;
 		DataOutputStream outSock;
-
+		System.out.println("ServerConThread " + this.getId() + " Avviato");
 		try {
 			String nomeFile;
 			try {
@@ -24,6 +25,7 @@ class ServerConThread extends Thread{
 				nomeFile = inSock.readUTF();
 			}
 			catch(SocketTimeoutException ste){
+				System.out.println("ServerConThread: " + this.getId());
 				System.out.println("Timeout scattato: ");
 				ste.printStackTrace();
 				clientSocket.close();
@@ -32,6 +34,7 @@ class ServerConThread extends Thread{
 				return;          
 			}        
 			catch (IOException ioe) {
+				System.out.println("ServerConThread: " + this.getId());
 				System.out
 					.println("Problemi nella creazione degli stream di input/output "
 							+ "su socket: ");
@@ -40,6 +43,7 @@ class ServerConThread extends Thread{
 				return;
 			}
 			catch (Exception e) {
+				System.out.println("ServerConThread: " + this.getId());
 				System.out
 					.println("Problemi nella creazione degli stream di input/output "
 							+ "su socket: ");
@@ -50,15 +54,16 @@ class ServerConThread extends Thread{
 			//elaborazione e comunicazione esito
 			FileOutputStream outFile = null;
 			if (nomeFile == null) {
+				System.out.println("ServerConThread: " + this.getId());
 				System.out.println("Problemi nella ricezione del nome del file: ");
 				clientSocket.close();
 			} else {
 				System.out.println("Ho ricevuto il nomeFile: " + nomeFile);
-				File curFile = new File(nomeFile);
 
 				// controllo su file
 				for (File f : directory.listFiles()) {
 					if(nomeFile.equals(f.getName())){
+						System.out.println("ServerConThread: " + this.getId());
 						System.out.println("Il file è già presente nel direttorio");
 						outSock.writeUTF("Salta File");
 						f.delete(); // eliminazione file
@@ -88,10 +93,12 @@ class ServerConThread extends Thread{
 				// ritorno esito positivo al client
 				outSock.writeUTF( "File salvato lato server");
 				clientSocket.shutdownOutput();	//chiusura socket (upstream)
+				System.out.println("ServerConThread: " + this.getId());
 				System.out.println("\nTerminata connessione con " + clientSocket);
 				clientSocket.close();
 			}
 			catch(SocketTimeoutException ste){
+				System.out.println("ServerConThread: " + this.getId());
 				System.out.println("Timeout scattato: ");
 				ste.printStackTrace();
 				clientSocket.close();
@@ -104,6 +111,7 @@ class ServerConThread extends Thread{
 								+ e.getMessage());
 				e.printStackTrace();
 				clientSocket.close();
+				System.out.println("ServerConThread: " + this.getId());
 				System.out.println("Terminata connessione con " + clientSocket);
 			}
 		}
@@ -111,8 +119,9 @@ class ServerConThread extends Thread{
 	    // in seguito alle quali il server termina l'esecuzione
 	    catch (Exception e) {
 	    	e.printStackTrace();
-	    	System.out
-	          .println("Errore irreversibile, PutFileServerThread: termino...");
+	    	System.out.println("ServerConThread: " + this.getId());
+			System.out
+	          .println("Errore irreversibile, termino...");
 	    	System.exit(3);
 	    }
 
@@ -133,7 +142,7 @@ public class ServerCon {
 				port = Integer.parseInt(args[0]);
 				// controllo che la porta sia nel range consentito 1024-65535
 				if (port < 1024 || port > 65535) {
-					System.out.println("Usage: java PutFileServerSeq or java PutFileServerSeq port");
+					System.out.println("Port argument must be in range 1024-65535");
 					System.exit(1);
 				}
 			} else if (args.length == 0) {
@@ -141,7 +150,7 @@ public class ServerCon {
 			} else if(args.length>1){
 				port = Integer.parseInt(args[0]);
                 if (port < 1024 || port > 65535) {
-					System.out.println("Usage: java PutFileServerSeq or java PutFileServerSeq port");
+					System.out.println("Usage: java ServerCon or java ServerCon port or java ServerCon workingDirectory");
 					System.exit(1);
 				}
                 workingDirectory = args[1];
@@ -155,8 +164,7 @@ public class ServerCon {
 		catch (Exception e) {
 			System.out.println("Problemi, i seguenti: ");
 			e.printStackTrace();
-			System.out
-				.println("Usage: java PutFileServerSeq or java PutFileServerSeq port");
+			System.out.println("Usage: java ServerCon or java ServerCon port or java ServerCon workingDirectory");
 			System.exit(1);
 		}
 
@@ -217,7 +225,7 @@ public class ServerCon {
 	    catch (Exception e) {
 	    	e.printStackTrace();
 	    	// chiusura di stream e socket
-	    	System.out.println("PutFileServerCon: termino...");
+	    	System.out.println("ServerCon: termino...");
 	    	System.exit(2);
 	    }
 

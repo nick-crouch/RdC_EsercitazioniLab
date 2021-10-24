@@ -121,7 +121,6 @@ public class ServerSeq {
                     continue;
                 } else {
                     System.out.println("Ho ricevuto il nomeFile: " + nomeFile);
-                    File curFile = new File(nomeFile);
 
                     // controllo su file
                     for (File f : wDir.listFiles()) {
