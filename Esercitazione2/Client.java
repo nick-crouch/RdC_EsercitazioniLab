@@ -95,7 +95,9 @@ public class Client {
                 }
 
                 // Ciclo for per controllare i file all'interno della directory
+                
                 for (File f : new File(nomeFile).listFiles()) {
+                    
                     // se il file è un direttorio, passo al file successivo
                     if (f.isDirectory()) {
                         System.out.println("File " + f.toString() + " è una directory");
@@ -187,9 +189,6 @@ public class Client {
 
                             }
 
-
-
-
                         }
                         catch(SocketTimeoutException ste){
                             System.out.println("Timeout scattato: ");
@@ -212,6 +211,7 @@ public class Client {
                         }
                     }
                 }
+                stdIn.reset();
                 System.out
                         .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome file: ");
 
