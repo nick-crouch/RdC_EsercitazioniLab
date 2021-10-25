@@ -15,7 +15,7 @@ public class Client {
                 addr = InetAddress.getByName(args[0]);
                 port = Integer.parseInt(args[1]);
             } else{
-                System.out.println("Usage: java PutFileClient serverAddr serverPort");
+                System.out.println("Usage: java Client serverAddr serverPort");
                 System.exit(1);
             }
         } //try
@@ -23,7 +23,7 @@ public class Client {
         catch(Exception e){
             System.out.println("Problemi, i seguenti: ");
             e.printStackTrace();
-            System.out.println("Usage: java PutFileClient serverAddr serverPort");
+            System.out.println("Usage: java Client serverAddr serverPort");
             System.exit(2);
         }
 
@@ -35,30 +35,30 @@ public class Client {
         DataOutputStream outSock = null;
         String nomeFile = null;
         long sizeMin=0;
-
+        
+        
+        
+        // creazione socket
+        try{
+            socket = new Socket(addr, port);
+            socket.setSoTimeout(30000);
+            System.out.println("Creata la socket: " + socket);
+        }
+        catch(Exception e){
+            System.out.println("Problemi nella creazione della socket: ");
+            e.printStackTrace();
+            System.out
+            .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
+            // il client continua l'esecuzione riprendendo dall'inizio del ciclo
+        }
         // creazione stream di input da tastiera
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         System.out
-                .print("MultiplePutFileClient Started.\n\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
-
+        .print("MultiplePutFileClient Started.\n\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
         try{
             while ( (nomeFile=stdIn.readLine()) != null){
                 // se il file esiste ed è una directory, creo la socket
                 if(new File(nomeFile).isDirectory()){
-                    // creazione socket
-                    try{
-                        socket = new Socket(addr, port);
-                        socket.setSoTimeout(30000);
-                        System.out.println("Creata la socket: " + socket);
-                    }
-                    catch(Exception e){
-                        System.out.println("Problemi nella creazione della socket: ");
-                        e.printStackTrace();
-                        System.out
-                                .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
-                        continue;
-                        // il client continua l'esecuzione riprendendo dall'inizio del ciclo
-                    }
 
                     // Chiedo all'utente la soglia minima in bytes
                     System.out.println("Inserisci dimensioni di soglia in bytes");
@@ -84,17 +84,7 @@ public class Client {
                         continue;
                         // il client continua l'esecuzione riprendendo dall'inizio del ciclo
                     }
-                }
-                // Il file inserito non esiste o non è una dir
-                else{
-                    System.out.println("Il File inidicato non esiste o non è una directory!");
-                    System.out
-                            .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
-                    // il client continua l'esecuzione riprendendo dall'inizio del ciclo
-                    continue;
-                }
-
-                // Ciclo for per controllare i file all'interno della directory
+                    // Ciclo for per controllare i file all'interno della directory
                 
                 for (File f : new File(nomeFile).listFiles()) {
                     
@@ -163,7 +153,10 @@ public class Client {
                                 // trasferimento file
                                 try{
                                     //FileUtility.trasferisci_a_linee_UTF_e_stampa_a_video(new DataInputStream(inFile), outSock);
-                                    FileUtility.trasferisci_a_byte_file_binario(new DataInputStream(inFile), outSock);
+                                    //FileUtility.trasferisci_a_byte_file_binario(new DataInputStream(inFile), outSock);
+                                    DataInputStream fDataInputStream = new DataInputStream(inFile);
+                                    outSock.write(fDataInputStream.readAllBytes(), 0, (int)f.length());
+                                    
                                     inFile.close(); 			// chiusura file
 
                                     System.out.println("Trasmissione di " + nomeFile + " terminata ");
@@ -211,7 +204,17 @@ public class Client {
                         }
                     }
                 }
-                stdIn.reset();
+                }
+                // Il file inserito non esiste o non è una dir
+                else{
+                    System.out.println("Il File inidicato non esiste o non è una directory!");
+                    System.out
+                            .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome directory: ");
+                    // il client continua l'esecuzione riprendendo dall'inizio del ciclo
+                    continue;
+                }
+
+                
                 System.out
                         .print("\n^D(Unix)/^Z(Win)+invio per uscire, oppure immetti nome file: ");
 
