@@ -6,11 +6,23 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Debug (Launch) with Arguments Prompt",
+            "request": "launch",
+            "mainClass": "Client",
+            "args": "localhost 8040",
+            "console": "integratedTerminal",
+            "projectName": "Rdc_EsercitazioniLab-1_28b27862"
+        },
+        
+        {
+            "type": "java",
             "name": "Launch Client",
             "request": "launch",
             "mainClass": "Client",
+            "args": "localhost 8040",
             "projectName": "Rdc_EsercitazioniLab-1_28b27862"
         },
+
         {
             "type": "java",
             "name": "Launch ServerSeq",
