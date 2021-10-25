@@ -17,113 +17,106 @@ class ServerConThread extends Thread{
 		DataOutputStream outSock;
 		System.out.println("ServerConThread " + this.getId() + " Avviato");
 		try {
+			inSock = new DataInputStream(clientSocket.getInputStream());
+			outSock = new DataOutputStream(clientSocket.getOutputStream());
 			String nomeFile;
-			try {
-				// creazione stream di input e out da socket
-				inSock = new DataInputStream(clientSocket.getInputStream());
-				outSock = new DataOutputStream(clientSocket.getOutputStream());
+			//  Finche' il cliente e' connesso
+			while (clientSocket.isConnected()) {
 				nomeFile = inSock.readUTF();
-			}
-			catch(SocketTimeoutException ste){
-				System.out.println("ServerConThread: " + this.getId());
-				System.out.println("Timeout scattato: ");
-				ste.printStackTrace();
-				clientSocket.close();
-				System.out
-					.print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
-				return;          
-			}        
-			catch (IOException ioe) {
-				System.out.println("ServerConThread: " + this.getId());
-				System.out
-					.println("Problemi nella creazione degli stream di input/output "
-							+ "su socket: ");
-				ioe.printStackTrace();
-				// il server continua l'esecuzione riprendendo dall'inizio del ciclo
-				return;
-			}
-			catch (Exception e) {
-				System.out.println("ServerConThread: " + this.getId());
-				System.out
-					.println("Problemi nella creazione degli stream di input/output "
-							+ "su socket: ");
-				e.printStackTrace();
-				return;
-			}
+				//elaborazione e comunicazione esito
+				FileOutputStream outFile = null;
+				//  Dead Code
 			
-			//elaborazione e comunicazione esito
-			FileOutputStream outFile = null;
-			if (nomeFile == null) {
-				System.out.println("ServerConThread: " + this.getId());
-				System.out.println("Problemi nella ricezione del nome del file: ");
-				clientSocket.close();
-			} else {
-				System.out.println("Ho ricevuto il nomeFile: " + nomeFile);
-
-				// controllo su file
-				for (File f : directory.listFiles()) {
-					if(nomeFile.equals(f.getName())){
-						System.out.println("ServerConThread: " + this.getId());
-						System.out.println("Il file è già presente nel direttorio");
-						outSock.writeUTF("Salta File");
-						f.delete(); // eliminazione file
-					}else{
-						continue;
+				if (nomeFile == null) {
+					System.out.println("Problemi nella ricezione del nome del file: ");
+					clientSocket.close();
+					continue;
+				
+				} else {
+					System.out.println("Ho ricevuto il nomeFile: " + nomeFile);
+					boolean found = false;
+					// controllo su file
+					for (File f : directory.listFiles()) {
+						if(nomeFile.equals(f.getName())){
+							System.out.println("Il file " + nomeFile + " e' già presente nel direttorio");
+							found = true;
+							///f.delete(); // eliminazione file
+						}else{
+							continue;
+						}
 					}
-				}
-				outSock.writeUTF("Attiva");
-				outFile = new FileOutputStream(nomeFile);
-			}
+					if(found){
+						outSock.writeUTF("Salta File");
+					}else{
+						System.out.println("Il file " + nomeFile + " non e' presente nel direttorio");
+						outSock.writeUTF("Attiva");
+					}
+					
+					outFile = new FileOutputStream(nomeFile);
+
+					long sizeFile;
+					// ricezione del file e dimensione
+					try {
+						// ricezione dimensione
+						sizeFile = Long.parseLong(inSock.readUTF());
+
+
+						System.out.println("Ricevo il file " + nomeFile + ": [" + sizeFile + " bytes] \n");
+						byte[] rBytes = new byte[(int)sizeFile];
+						inSock.read(rBytes, 0, (int)sizeFile);
+						outFile.write(rBytes);
+						/**
+							FileUtility.trasferisci_a_byte_file_binario(inSock,
+									new DataOutputStream(outFile));
+						*/
+						System.out.println("\nRicezione del file " + nomeFile
+								+ " terminata\n");
+						outFile.close();				// chiusura file
+					}catch(SocketTimeoutException ste){
+							System.out.println("Timeout scattato: ");
+							ste.printStackTrace();
+							clientSocket.close();
+							System.out
+							.print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
+							continue;
+					}catch (Exception e) {
+							System.err
+							.println("\nProblemi durante la ricezione e scrittura del file: "
+							+ e.getMessage());
+							e.printStackTrace();
+							clientSocket.close();
+							System.out.println("Terminata connessione con " + clientSocket);
+							continue;
+						}
+				}//Fine Else
+			}//Fine While
 			
-			long sizeFile;
-            // ricezione del file e dimensione
+			clientSocket.shutdownInput();	//chiusura socket (downstream)
+			// ritorno esito positivo al client
+			outSock.writeUTF( "File salvato lato server");
+			clientSocket.shutdownOutput();	//chiusura socket (upstream)
+			System.out.println("\nTerminata connessione con " + clientSocket);
+			clientSocket.close();
+		}catch(SocketTimeoutException ste){
+			System.out.println("Timeout scattato: ");
+			ste.printStackTrace();
 			try {
-				// ricezione dimensione
-				sizeFile = Long.parseLong(inSock.readUTF());
-
-
-				System.out.println("Ricevo il file " + nomeFile + ": [" + sizeFile + "] \n");
-				/**NOTA: la funzione consuma l'EOF*/
-				FileUtility.trasferisci_a_byte_file_binario(inSock,
-						new DataOutputStream(outFile));
-				System.out.println("\nRicezione del file " + nomeFile
-						+ " terminata\n");
-				outFile.close();				// chiusura file
-				clientSocket.shutdownInput();	//chiusura socket (downstream)
-				// ritorno esito positivo al client
-				outSock.writeUTF( "File salvato lato server");
-				clientSocket.shutdownOutput();	//chiusura socket (upstream)
-				System.out.println("ServerConThread: " + this.getId());
-				System.out.println("\nTerminata connessione con " + clientSocket);
 				clientSocket.close();
-			}
-			catch(SocketTimeoutException ste){
-				System.out.println("ServerConThread: " + this.getId());
-				System.out.println("Timeout scattato: ");
-				ste.printStackTrace();
-				clientSocket.close();
-				System.out
-						.print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
-			}
-			catch (Exception e) {
-				System.err
-						.println("\nProblemi durante la ricezione e scrittura del file: "
-								+ e.getMessage());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
-				clientSocket.close();
-				System.out.println("ServerConThread: " + this.getId());
-				System.out.println("Terminata connessione con " + clientSocket);
 			}
-		}
-	    // qui catturo le eccezioni non catturate all'interno del while
-	    // in seguito alle quali il server termina l'esecuzione
-	    catch (Exception e) {
-	    	e.printStackTrace();
-	    	System.out.println("ServerConThread: " + this.getId());
 			System.out
-	          .println("Errore irreversibile, termino...");
-	    	System.exit(3);
-	    }
+					.print("\n^D(Unix)/^Z(Win)+invio per uscire, solo invio per continuare: ");
+			
+		}catch (IOException e) {
+			System.out
+					.println("Problemi nella creazione degli stream di input/output "
+							+ "su socket: ");
+			e.printStackTrace();
+			// il server continua l'esecuzione riprendendo dall'inizio del ciclo
+			
+		}
 
     }
 }
