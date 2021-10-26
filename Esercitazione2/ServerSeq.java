@@ -113,7 +113,7 @@ public class ServerSeq {
                                 if(nomeFile.equals(f.getName())){
                                     System.out.println("Il file " + nomeFile + " e' già presente nel direttorio");
                                     found = true;
-                                    ///f.delete(); // eliminazione file
+                                    break;
                                 }else{
                                     continue;
                                 }
