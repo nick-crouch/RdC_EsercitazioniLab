@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc!=3){
-		printf("Error:%s serverAddress serverPort\n", argv[0]);
+		printf("Usage: %s serverAddress serverPort\n", argv[0]);
 		exit(1);
 	}
 
