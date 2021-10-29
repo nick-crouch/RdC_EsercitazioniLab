@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
 	/* CORPO DEL CLIENT:
 	ciclo di accettazione di richieste da utente ------- */
-	printf("inserire il nome di un file\n");
+	printf("Inserire il nome di un file\n");
 	while (gets(nome_sorg)){
 		printf("File da spedire: __%s__\n", nome_sorg);
 
@@ -70,9 +70,8 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		/*Verifico intero*/
-		if(scanf("%d",&numriga)!=1)
-		{
-         printf("errore lettura intero");
+		if(scanf("%d",&numriga)!=1){
+         printf("Errore lettura intero");
 		}
 			printf("Nome del file da spedire e numero linea, EOF per terminare: ");
 			continue;
@@ -84,13 +83,16 @@ int main(int argc, char *argv[])
 		printf("Client: creata la socket sd=%d\n", sd);
 
 		/* Operazione di BIND implicita nella connect */
-		if(connect(sd,(struct sockaddr *) &servaddr, sizeof(struct sockaddr))<0)
-		{perror("connect"); exit(1);}
+		if(connect(sd,(struct sockaddr *) &servaddr, sizeof(struct sockaddr))<0){
+			perror("connect"); exit(1);}
 		printf("Client: connect ok\n");
 
 		/*INVIO File e numero linea*/
-		printf("Client: stampo e invio file da ordinare\n");
-		while((nread=read(fd_sorg, buff, DIM_BUFF))>0){
+		printf("Client: invio numero di linea\n");
+		write(sd, &numriga, sizeof(int));
+
+		printf("Client: invio file\n");
+		while((nread=read(fd_sorg, &buff, DIM_BUFF))>0){
 			write(sd,buff,nread);	//invio
 		}
 		printf("Client: file inviato\n");
@@ -99,9 +101,9 @@ int main(int argc, char *argv[])
 
 		/*RICEZIONE File*/
 		printf("Client: ricevo e stampo alterato\n");
-		while((nread=read(sd,buff,DIM_BUFF))>0){
-			write(fd_dest,buff,nread);
-			write(1,buff,nread);
+		while((nread=read(sd, &buff,DIM_BUFF))>0){
+			write(fd_dest,&buff,nread);
+			write(1,&buff,nread);
 		}
 		printf("Traspefimento terminato\n");
 		/* Chiusura socket in ricezione */

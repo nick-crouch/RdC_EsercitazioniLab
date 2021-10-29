@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 			execl("/usr/bin/sort", "sort", (char *)0);
 
 		} // figlio
-		close(conn_sd);  // padre chiude socket di connessione non di scolto
+		close(conn_sd);  // padre chiude socket di connessione non di ascolto
 	} // ciclo for infinito
 }
 
