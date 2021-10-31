@@ -71,8 +71,7 @@ int main(int argc, char *argv[])
 		}
 		/*Verifico intero*/
 		if(scanf("%d",&numriga)!=1){
-         printf("Errore lettura intero");
-		}
+			printf("Errore lettura intero");
 			printf("Nome del file da spedire e numero linea, EOF per terminare: ");
 			continue;
 		}
@@ -117,5 +116,6 @@ int main(int argc, char *argv[])
 	}//while
 	printf("\nClient: termino...\n");
 	exit(0);
+	
 }
 
