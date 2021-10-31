@@ -110,7 +110,7 @@ int main(int argc, char **argv)
             
             int index;
             read(conn_sd, &index, sizeof(int));
-            index = ntohs(index);
+            //index = ntohs(index);
             printf("Server (figlio): letto l'indice linea : %d\n", index);
 			
             char r;

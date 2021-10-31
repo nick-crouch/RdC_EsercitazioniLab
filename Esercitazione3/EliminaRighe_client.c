@@ -65,17 +65,19 @@ int main(int argc, char *argv[])
 
 		/* Verifico l'esistenza del file */
 		if((fd_sorg=open(nome_sorg, O_RDONLY))<0){
-			perror("open file sorgente"); 
+			printf("open file sorgente"); 
 			printf("Qualsiasi tasto per procedere, EOF per fine: ");
 			continue;
 		}
+		printf("Insersci numero di riga\n");
+
 		/*Verifico intero*/
 		if(scanf("%d",&numriga)!=1){
 			printf("Errore lettura intero");
 			printf("Nome del file da spedire e numero linea, EOF per terminare: ");
 			continue;
 		}
-
+		printf("Numero di linea %d\n", numriga);
 		/* CREAZIONE SOCKET ------------------------------------ */
 		sd=socket(AF_INET, SOCK_STREAM, 0);
 		if(sd<0) {perror("apertura socket"); exit(1);}
@@ -97,14 +99,20 @@ int main(int argc, char *argv[])
 		printf("Client: file inviato\n");
 		/* Chiusura socket in spedizione -> invio dell'EOF */
 		shutdown(sd,1);
-
+		/*	Creazione file destinazione	*/
+		if((fd_dest = open("output.txt", O_CREAT | O_WRONLY | O_TRUNC, 0777))<0){
+			printf("open file destinazione"); 
+			printf("Qualsiasi tasto per procedere, EOF per fine: ");
+			continue;
+		}
 		/*RICEZIONE File*/
 		printf("Client: ricevo e stampo alterato\n");
 		while((nread=read(sd, &buff,DIM_BUFF))>0){
 			write(fd_dest,&buff,nread);
 			write(1,&buff,nread);
 		}
-		printf("Traspefimento terminato\n");
+		printf("\nTraspefimento terminato\n");
+		getchar();
 		/* Chiusura socket in ricezione */
 		shutdown(sd, 0);
 		/* Chiusura file */
