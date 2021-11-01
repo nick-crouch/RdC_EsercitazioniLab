@@ -25,8 +25,10 @@ int main(int argc, char **argv)
 	int  port, sd, fd, len, ris, ok, dim, num1;
 	char okstr[LINE_LENGTH], fn[LINE_LENGTH];
 	char c;
+    
 	Request req;
 
+    
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc!=3){
 		printf("Error:%s serverAddress serverPort\n", argv[0]);
@@ -85,58 +87,14 @@ int main(int argc, char **argv)
 
 	/* CORPO DEL CLIENT: ciclo di accettazione di richieste da utente */
 	printf("Inserire nome file o EOF per terminare: ");
-    
 
-	/* ATTENZIONE!!
-	* Cosa accade se la riga e' piu' lunga di LINE_LENGTH-1?
-	* Stesso dicasi per le altre gets...
-	* Come si potrebbe risolvere il problema?
-	*/
-
-
-	while ((ok=scanf("%i", &num1)) != EOF )
-	{
-        
-        gets(fn);
-        
-        
-
-            
-        /*
-    		// quando arrivo qui l'input e' stato letto correttamente
-		req.op1=htonl(num1);
-		// Consumo il new line, ed eventuali altri caratteri
-		// immessi nella riga dopo l'intero letto
-		gets(okstr);  
-		printf("Stringa letta: %s\n", okstr);
-
-		printf("Inserire secondo operando (intero): ");
-
-		while (scanf("%i", &num2) != 1){
-			do{c=getchar(); printf("%c ", c);}
-			while (c!= '\n');
-			printf("Secondo operando (intero): ");
-		}
-
-		req.op2=htonl(num2);
-		gets(okstr); //consumo resto linea
-		printf("Stringa letta: %s\n", okstr);
-
-		do{
-			printf("Operazione (+ = addizione, - = sottrazione, * = moltiplicazione, / = divisione): ");
-			c = getchar();
-		}
-		while (c!='+' && c !='-' && c!='*' && c !='/');
-
-		req.tipoOp=c;
-		gets(okstr); //consumo resto linea
-		printf("Stringa letta: %s\n", okstr);
-*/
-
+	while (gets(fn)) {
+	
         strcpy(req.fileName, fn);
         printf("Nome file inserito: %s\n", req.fileName);
 		/* richiesta operazione */
 		len=sizeof(servaddr);
+        
 		if(sendto(sd, &req, sizeof(Request), 0, (struct sockaddr *)&servaddr, len)<0){
 			perror("sendto");
 			continue;
@@ -148,6 +106,8 @@ int main(int argc, char **argv)
 			perror("recvfrom"); continue;}
 
 		printf("Esito dell'operazione: %i\n", (int)ntohl(ris));
+        
+		// Nuova richiesta
 		printf("Inserisci nome file o EOF per terminare: ");
 
 	} // while gets
@@ -155,5 +115,6 @@ int main(int argc, char **argv)
 	//CLEAN OUT
 	close(sd);
 	printf("\nClient: termino...\n");  
+    
 	exit(0);
 }

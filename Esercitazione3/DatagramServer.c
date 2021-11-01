@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <time.h>
 #include <string.h>
 
 #define LINE_LENGTH 256
@@ -25,6 +26,7 @@ int main(int argc, char **argv){
 	int sd, port, len, num1, fd, ris, dim, max;
 	const int on = 1;
     int ok;
+    clock_t begin, end;
     char fn[LINE_LENGTH], str[LINE_LENGTH], c;
 	struct sockaddr_in cliaddr, servaddr;
 	struct hostent *clienthost;
@@ -103,7 +105,9 @@ int main(int argc, char **argv){
             close(fd);
             
             max = 0;
-           while ((c = getchar()) != EOF ) {
+            begin = clock();
+//            while ((c = getchar()) != EOF ) { // lettura byte a byte
+           while (read(0, &c, sizeof(char)) >0) { // lettura con read
                if (c == '\n' || c == ' ') {
                    if (ris > max) {
                      max = ris;   
@@ -112,14 +116,19 @@ int main(int argc, char **argv){
                } else {
                 ris++;   
                }
-//             printf("%c", c);
+             //printf("%c", c);
            }
+           
+        
+            
         }
         
         close(fd);
 		
-		
+		end = clock();
+        printf("\n\nThe elapsed time is %f seconds.\n\n",  (float) (end-begin)/CLOCKS_PER_SEC);
         printf("Invio esito operazione [%d]\n", max);
+        
 		max=htonl(max);
 		if (sendto(sd, &max, sizeof(max), 0, (struct sockaddr *)&cliaddr, len)<0)
 		{perror("sendto "); continue;}
