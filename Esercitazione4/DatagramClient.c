@@ -1,4 +1,4 @@
-/* Client per richiedere il numero di file in un direttorio remoto */
+/* Client per richiedere eliminazione di occorrenze di una parola in un file */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,14 +14,19 @@
 #define LENGTH_FILE_NAME 20
 #define STRING_LENGTH 256
 
+typedef struct{
+	char nome_file[LENGTH_FILE_NAME];
+    char parola[STRING_LENGTH];
+}Request;
+
 int main(int argc, char **argv){
 	struct hostent *host;
 	struct sockaddr_in clientaddr, servaddr;
 	int sd, nread, port, result;
 
 	int len;
-	char richiesta [STRING_LENGTH];
-    char *nome_file, *parola;
+	char fn[LENGTH_FILE_NAME], word[STRING_LENGTH];
+    Request req;
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
 	if(argc!=3){
@@ -72,18 +77,21 @@ int main(int argc, char **argv){
 	printf("Client: bind socket ok, alla porta %i\n", clientaddr.sin_port);
 
 	/* CORPO DEL CLIENT: */
-	printf("Nome del file e parola da eliminare: ");
+	printf("Inserire nome del file: ");
 
-	while (gets(richiesta)){
+	while (gets(fn)){
         
-        nome_file = strtok(richiesta, " ");
-        parola = strtok(NULL, " ");
+        strcpy(req.nome_file, fn);
         
-        printf("Nome file: %s\t\tParola: %s\n", nome_file, parola);
+        printf("Inserire parola: ");
+        if (gets(word)) {
+        strcpy(req.parola, word);
+        
+        printf("Nome file: %s\t\tParola: %s\n", req.nome_file, req.parola);
         
         /* invio richiesta */
 		len=sizeof(servaddr);
-		if (sendto(sd, richiesta, (strlen(richiesta)+1), 0, (struct sockaddr *)&servaddr, len)<0){
+		if (sendto(sd, &req, (sizeof(Request)), 0, (struct sockaddr *)&servaddr, len)<0){
 			perror("scrittura socket");
 			printf("Nome del file e parola da eliminare: ");
 			continue; // se questo invio fallisce il client torna all'inzio del ciclo
@@ -97,11 +105,12 @@ int main(int argc, char **argv){
 			continue; // se questa ricezione fallisce il client torna all'inzio del ciclo
 		}
 
-		if (result<0) printf("Il file inserito non esiste\n", nome_file);
+		if (result<0) printf("Il file inserito non esiste\n", req.nome_file);
 
 		else printf("Numero occorrenze eliminate: %d\n", ntohl(result));
 		
-		printf("Nome del file e parola da eliminare: ");
+		printf("Inserire nome file: ");
+        }
 
 	} // while
 
