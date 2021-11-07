@@ -62,7 +62,7 @@ int main(int argc, char **argv){
 	int len, nread, nwrite, num = 0, ris, port;
 	struct sockaddr_in cliaddr, servaddr;
     Request* req =(Request*)malloc(sizeof(Request));
-    FILE *fp;
+    
 
 
 	/* CONTROLLO ARGOMENTI ---------------------------------- */
@@ -226,42 +226,90 @@ int main(int argc, char **argv){
 			{perror("recvfrom"); continue;}
 			
 			printf("Nome file:%s\n", req->nome_file);
+			
 
 			printf("Richiesta eliminazione occorrenze di %s nel file %s\n",  req->parola,req->nome_file);
             
             /* ALGORITMO ELIMINA OCCORRENZE */
-            int fd;
-            int res = 0;
-            char word[DIM_BUFF];
-            char punt[] = ".;,:!?";
-            char temp[DIM_BUFF];
-            int n;
+            int fi, fout;
+            char temp[] = "outfile.txt";
             
-            if ((fp = fopen(req->nome_file, "r+")) == NULL) {
-                printf("Errore nell'apertura del file");
-                num = -1;
-                }
-            
-            
-            while ((n=fscanf(fp, "%s", &word)) != EOF) {
-                // TODO: scanf eliminando la punteggiatura [. , : ;]
-                
-                 printf("%s\n", temp);
-                 //printf("%s\n", word);
-                 if (strcmp(temp, req->parola) == 0) {
-               // if (strcmp(word, req->parola) == 0) {
-                    num++;
-                } else {
-                // TODO: eliminazione parole che corrispondono a quella inserita
-                 //fwrite(word, strlen(word), 1, fp);
-                }
-            }
-                fclose(fp);
+			char buff[strlen(req->nome_file)+1];
+			fi = open(req->nome_file, O_RDONLY);
+			fout = open(temp, O_WRONLY|O_CREAT|O_TRUNC, 0600);
+
+			if (fi < 0){
+				printf("lettura file orig, %s\n", req->nome_file);
+				close(fi);
+				return -1;
+			}
+			if (fout < 0){
+				printf("lettura file temp, %s\n", temp);
+				close(fi);
+				close(fout);
+				return -1;
+			}
+			char c;
+			int j = 0, occ = 0;
+			char currentWord[STRING_LENGTH];
+
+			/*	Filtro a carattere	*/
+			while(read(fi, &c, 1) != EOF){
+				if(c != ' '){
+					currentWord[j]=c;
+					j++;
+           		}else{
+					/*	Ho trovato una parola	*/
+                	if(strcmp(currentWord, req->parola)==0){
+						/*	La parola e' quella da eliminare (non la salvo nel nuovo file), conto le occorrenze	*/ 
+						occ++;
+						printf("Occorrenze %s: %d\n",currentWord, occ);
+						/*	Inizializzo nuovamente la stringa	*/
+						memset(currentWord,0,sizeof(currentWord));
+						j=0;
+					}else{
+						/*	La parola non e' quella da eliminare, la scrivo dentro il nuovo file*/
+						write(fout, &currentWord, strlen(currentWord));
+						/*	Inizializzo nuovamente la stringa	*/
+						memset(currentWord,0,sizeof(currentWord));
+						j=0;
+					}	
+				}
+			}
+			/*	Dopo la chiusura dei file il file originale va unlinkato e il nuovo file deve essere rinominato come il file originale
+				cosi' da prendere il suo posto nel file system? */
+			close(fi);
+			close(fout);
+
+			//	NON SI POSSONO UTILIZZARE I TIPI FILE BROOOO
+			/**
+				FILE *fp;
+	            if ((fp = fopen(req->nome_file, "r+")) == NULL) {
+	                printf("Errore nell'apertura del file");
+	                num = -1;
+	                }
+	            
+	            
+	            while ((n=fscanf(fp, "%s", &word)) != EOF) {
+	                // TODO: scanf eliminando la punteggiatura [. , : ;]
+	                
+	                 printf("%s\n", temp);
+	                 //printf("%s\n", word);
+	                 if (strcmp(temp, req->parola) == 0) {
+	               // if (strcmp(word, req->parola) == 0) {
+	                    num++;
+	                } else {
+	                // TODO: eliminazione parole che corrispondono a quella inserita
+	                 //fwrite(word, strlen(word), 1, fp);
+	                }
+	            }
+	            fclose(fp);
+			*/
         
     
 			
             
-			printf("Risultato del conteggio: %i\n", num);
+			printf("Risultato del conteggio: %i\n", occ);
 
 			/*
 			* Cosa accade se non commentiamo le righe di codice qui sotto?
@@ -276,7 +324,7 @@ int main(int argc, char **argv){
 			sleep(30);
 			printf("Fine sleep\n");*/
             
-			ris=htonl(num);
+			ris=htonl(occ);
 			if (sendto(udpfd, &ris, sizeof(ris), 0, (struct sockaddr *)&cliaddr, len)<0)
 			{perror("sendto"); continue;}
 		} /* fine gestione richieste di conteggio */
