@@ -22,6 +22,7 @@
 #define max(a,b) ((a) > (b) ? (a) : (b))
 
 typedef struct{
+    char nome_dir[LENGTH_FILE_NAME];
 	char nome_file[LENGTH_FILE_NAME];
     char parola[STRING_LENGTH];
 }Request;
@@ -35,7 +36,7 @@ int conta_file (char *name){
 	dir = opendir (name);
 	if (dir==NULL) return -1;
 	while ((dd = readdir(dir)) != NULL){
-		printf("Trovato il file %s\n", dd-> d_name);
+		printf("Trovato il direttorio %s\n", dd-> d_name);
 		count++;
 	}
 	/*Conta anche direttorio stesso e padre*/
@@ -139,39 +140,68 @@ int main(int argc, char **argv){
 		}
 
 		/* GESTIONE RICHIESTE DI GET DI UN FILE ------------------------------------- */
-		if (FD_ISSET(listenfd, &rset)){
+		/*if (FD_ISSET(listenfd, &rset)){
+			printf("Ricevuta richiesta di conteggio file\n");
+
+			len=sizeof(struct sockaddr_in);
+			if (recvfrom(listenfd, &nome_dir, sizeof(nome_dir), 0, (struct sockaddr *)&cliaddr, &len)<0)
+			{perror("recvfrom"); continue;}*/
+
+			
+			if (FD_ISSET(listenfd, &rset)){
 			printf("Ricevuta richiesta di get di un file\n");
 			len = sizeof(struct sockaddr_in);
 			if((connfd = accept(listenfd,(struct sockaddr *)&cliaddr,&len))<0){
 				if (errno==EINTR) continue;
 				else {perror("accept"); exit(9);}
 			}
-
+			
 			if (fork()==0){ /* processo figlio che serve la richiesta di operazione */
+                
 				close(listenfd);
+                int fd_dir;
+                int count=0;
+                char dir_element[DIM_BUFF];
+                DIR *dir, *dir2;
+                struct dirent * dd, * dd2;
+                
 				printf("Dentro il figlio, pid=%i\n", getpid());
-				/* non c'è più il ciclo perchè viene creato un nuovo figlio */
-				/* per ogni richiesta di file */
-				if (read(connfd, &nome_file, sizeof(nome_file))<=0)
+				/* non c'Ã¨ piÃ¹ il ciclo perchÃ¨ viene creato un nuovo figlio */
+				/* per ogni richiesta */
+				if (read(connfd, &nome_dir, sizeof(nome_dir))<=0)
 				{ perror("read"); break; }
 
-				printf("Richiesto file %s\n", nome_file);
-				fd_file=open(nome_file, O_RDONLY);
-				if (fd_file<0){
-					printf("File inesistente\n"); 
+				printf("Richiesto direttorio %s\n", nome_dir);
+				dir=opendir(nome_dir);
+				if (dir==NULL){
+					printf("direttorio inesistente\n"); 
 					write(connfd, "N", 1);
 				}
 				else{
-					write(connfd, "S", 1);
-					/* lettura e invio del file (a blocchi)*/
-					printf("Leggo e invio il file richiesto\n");
-					while((nread=read(fd_file, buff, sizeof(buff)))>0){
-						if ((nwrite=write(connfd, buff, nread))<0)
-						{perror("write"); break;}
+					//write(connfd, "S", 1);
+					// TODO:nome dei file nei dir di II liv
+                   while ((dd = readdir(dir)) != NULL){
+                    printf("Trovato il direttorio %s\n", dd-> d_name);
+                   /*dir2=opendir(dd-> d_name);
+                   if (dir2==NULL){
+					printf("Trovato il file %s\n", dd-> d_name); 
+                    }
+                    else{
+                        printf("Trovato il direttorio %s\n", dd-> d_name);
+                        while ((dd2 = readdir(dir2)) != NULL){
+                            printf("Trovato elemento %s\n", dd2-> d_name);
+                        }
+                    }*/
+                    count++;
+                    }
+                    /*Conta anche direttorio stesso e padre*/
+                    printf("Numero totale di file %d\n", count);
+                    
+                    
 					}
 					printf("Terminato invio file\n");
-					/* non è più necessario inviare al client un segnale di terminazione */
-					close(fd_file);
+					/* non Ã¨ piÃ¹ necessario inviare al client un segnale di terminazione */
+					closedir(dir);
 				}
 
 				/*la connessione assegnata al figlio viene chiusa*/
@@ -185,9 +215,9 @@ int main(int argc, char **argv){
 			/*shutdown(connfd,0);
 			shutdown(connfd,1);
 			close(connfd);*/
-		} /* fine gestione richieste di file */
+		 /* fine gestione richieste di file */
 
-		/* GESTIONE RICHIESTE DI CONTEGGIO ------------------------------------------ */
+		/* GESTIONE RICHIESTE DI ELIMINAZIONE PAROLA ------------------------------------------ */
 		if (FD_ISSET(udpfd, &rset)){
 			printf("Ricevuta richiesta di eliminazione parola su file\n");
 
@@ -203,17 +233,23 @@ int main(int argc, char **argv){
             int fd;
             int res = 0;
             char word[DIM_BUFF];
+            char punt[] = ".;,:!?";
+            char temp[DIM_BUFF];
+            int n;
             
-            if ((fp = fopen(req->nome_file, "w")) == NULL) {
+            if ((fp = fopen(req->nome_file, "r+")) == NULL) {
                 printf("Errore nell'apertura del file");
                 num = -1;
                 }
             
             
-            while (fscanf(fp, "%s", &word) != EOF) {
+            while ((n=fscanf(fp, "%s", &word)) != EOF) {
                 // TODO: scanf eliminando la punteggiatura [. , : ;]
-                // printf("%s\n", word);
-                if (strcmp(word, req->parola) == 0) {
+                
+                 printf("%s\n", temp);
+                 //printf("%s\n", word);
+                 if (strcmp(temp, req->parola) == 0) {
+               // if (strcmp(word, req->parola) == 0) {
                     num++;
                 } else {
                 // TODO: eliminazione parole che corrispondono a quella inserita
