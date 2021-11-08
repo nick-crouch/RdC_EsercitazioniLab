@@ -105,7 +105,7 @@ int main(int argc, char **argv){
 			continue; // se questa ricezione fallisce il client torna all'inzio del ciclo
 		}
 
-		if (result<0) printf("Il file inserito non esiste\n", req.nome_file);
+		if (result<0) printf("Il file inserito non esiste: %s\n", req.nome_file);
 
 		else printf("Numero occorrenze eliminate: %d\n", ntohl(result));
 		

@@ -20,9 +20,9 @@
 #define STRING_LENGTH 256
 #define LENGTH_FILE_NAME 20
 #define max(a,b) ((a) > (b) ? (a) : (b))
-
+/*	La Request deve essere omogenea a quella del Client*/
 typedef struct{
-    char nome_dir[LENGTH_FILE_NAME];
+    //char nome_dir[LENGTH_FILE_NAME];
 	char nome_file[LENGTH_FILE_NAME];
     char parola[STRING_LENGTH];
 }Request;
@@ -178,26 +178,37 @@ int main(int argc, char **argv){
 					write(connfd, "N", 1);
 				}
 				else{
-					//write(connfd, "S", 1);
-					// TODO:nome dei file nei dir di II liv
-                   while ((dd = readdir(dir)) != NULL){
-                    printf("Trovato il direttorio %s\n", dd-> d_name);
-                   /*dir2=opendir(dd-> d_name);
-                   if (dir2==NULL){
-					printf("Trovato il file %s\n", dd-> d_name); 
-                    }
-                    else{
-                        printf("Trovato il direttorio %s\n", dd-> d_name);
-                        while ((dd2 = readdir(dir2)) != NULL){
-                            printf("Trovato elemento %s\n", dd2-> d_name);
-                        }
-                    }*/
-                    count++;
-                    }
-                    /*Conta anche direttorio stesso e padre*/
-                    printf("Numero totale di file %d\n", count);
-                    
-                    
+					char *nestedDir, *nestedFile;
+					while ((dd = readdir(dir)) != NULL){
+						/*	Directory entry e' una directory*/
+							if(dd->d_type == DT_DIR){
+								nestedDir = dd->d_name;
+								/*	Non considero la directory corrente e la directory padre*/
+								if (nestedDir[0] == '.' && (nestedDir[1] == '\0' || (nestedDir[1] == '.' && nestedDir[2] == '\0'))){
+									continue;
+								}
+								dir2 = opendir(nestedDir);
+								/*	Leggo tutti gli entri della directory di II livello*/
+								while((dd2 = readdir(dir2)) != NULL){
+									nestedFile = dd2->d_name;
+
+									/*	Se il file e' un file nascosto non lo considero*/
+									if (nestedFile[0] == '.' ){
+										continue;
+									}
+									/*	Se la entry e' un file regolare*/
+									if(dd2->d_type == DT_REG){
+										/*	Invio nome file	*/
+										write(connfd, nestedFile, strlen(nestedFile)+1);
+									}else{
+										continue;
+									}
+								}
+							}else{
+								/*	Directory entry non e' una directory*/
+								continue;
+							}
+                    	} 
 					}
 					printf("Terminato invio file\n");
 					/* non è più necessario inviare al client un segnale di terminazione */
@@ -239,23 +250,21 @@ int main(int argc, char **argv){
 			fout = open(temp, O_WRONLY|O_CREAT|O_TRUNC, 0600);
 
 			if (fi < 0){
-				printf("lettura file orig, %s\n", req->nome_file);
+				printf("Errore lettura file orig, %s\n", req->nome_file);
 				close(fi);
-				return -1;
 			}
 			if (fout < 0){
-				printf("lettura file temp, %s\n", temp);
+				printf("Errore apertura file temp, %s\n", temp);
 				close(fi);
 				close(fout);
-				return -1;
 			}
 			char c;
 			int j = 0, occ = 0;
 			char currentWord[STRING_LENGTH];
 
 			/*	Filtro a carattere	*/
-			while(read(fi, &c, 1) != EOF){
-				if(c != ' '){
+			while(read(fi, &c, 1) > 0){
+				if(c != ' ' && c != '\n'){
 					currentWord[j]=c;
 					j++;
            		}else{
@@ -270,6 +279,8 @@ int main(int argc, char **argv){
 					}else{
 						/*	La parola non e' quella da eliminare, la scrivo dentro il nuovo file*/
 						write(fout, &currentWord, strlen(currentWord));
+						/*	Scrivo anche il separatore	*/
+						write(fout, &c, 1);
 						/*	Inizializzo nuovamente la stringa	*/
 						memset(currentWord,0,sizeof(currentWord));
 						j=0;
@@ -277,11 +288,12 @@ int main(int argc, char **argv){
 				}
 			}
 			/*	Dopo la chiusura dei file il file originale va unlinkato e il nuovo file deve essere rinominato come il file originale
-				cosi' da prendere il suo posto nel file system? */
+				cosi' da prendere il suo posto nel file system */
+			close(fi);
 			unlink(req->nome_file);
 			rename(temp, req->nome_file);
-			close(fi);
 			close(fout);
+
 
 			//	NON SI POSSONO UTILIZZARE I TIPI FILE BROOOO
 			/**
