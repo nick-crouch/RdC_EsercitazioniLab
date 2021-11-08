@@ -17,6 +17,7 @@
 int main(int argc, char *argv[]){
 	int sd, nread, nwrite, port;
 	char ok, buff[DIM_BUFF], nome_file[LENGTH_FILE_NAME];
+    char c;
 	struct hostent *host;
 	struct sockaddr_in servaddr;
 
@@ -86,7 +87,7 @@ int main(int argc, char *argv[]){
 
 		if (ok=='S'){
 			printf("Ricevo i file:\n");
-			while((nread=read(sd, buff, sizeof(buff)))>0){
+			/*while((nread=read(sd, buff, sizeof(buff)))>0){
 				if ((nwrite=write(1, buff, nread))<0){ //print on screen
 					perror("write");
 					break;
@@ -97,7 +98,14 @@ int main(int argc, char *argv[]){
 				close(sd);
 				printf("Nome del direttorio da richiedere: ");
 				continue;
-			}      
+			}     */ 
+            
+            while((nread=read(sd,&c,1))>0) // leggo a caratteri per individuare il fine file
+				if (c!='\0'){
+					write(1,&c,1);
+				}
+				else break;
+			if( nread < 0 ){perror("read");break;}
 		}
 		else if (ok=='N') printf("Direttorio inesistente\n");
 
@@ -105,8 +113,9 @@ int main(int argc, char *argv[]){
 		shutdown(sd, 0);
 		close(sd); //chiusura sempre DENTRO
 		printf("Nome del direttorio da richiedere: ");
-
+        
 	}//while
+	
 	printf("\nClient: termino...\n");
 	exit(0);
 }

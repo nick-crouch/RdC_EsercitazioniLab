@@ -1,7 +1,3 @@
-/* Server Select
- * 	Nuovo figlio per ogni richiesta file.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +21,7 @@ typedef struct{
     char nome_dir[LENGTH_FILE_NAME];
 	char nome_file[LENGTH_FILE_NAME];
     char parola[STRING_LENGTH];
+
 }Request;
 
 /*Funzione conteggio file in un direttorio*/
@@ -58,6 +55,7 @@ int main(int argc, char **argv){
 	const int on = 1;
 	char buff[DIM_BUFF], nome_file[LENGTH_FILE_NAME], n, nome_dir[LENGTH_FILE_NAME],nome_dir_livello_2[LENGTH_FILE_NAME];
     char *fn, *word;
+    char zero=0;
 	fd_set rset;
 	int len, nread, nwrite, num = 0, ris, port;
 	struct sockaddr_in cliaddr, servaddr;
@@ -142,13 +140,12 @@ int main(int argc, char **argv){
 		/* GESTIONE RICHIESTE DI GET DI UN FILE ------------------------------------- */
 		/*if (FD_ISSET(listenfd, &rset)){
 			printf("Ricevuta richiesta di conteggio file\n");
-
 			len=sizeof(struct sockaddr_in);
 			if (recvfrom(listenfd, &nome_dir, sizeof(nome_dir), 0, (struct sockaddr *)&cliaddr, &len)<0)
 			{perror("recvfrom"); continue;}*/
 
-			
-			if (FD_ISSET(listenfd, &rset)){
+         
+         if (FD_ISSET(listenfd, &rset)){
 			printf("Ricevuta richiesta di get di un file\n");
 			len = sizeof(struct sockaddr_in);
 			if((connfd = accept(listenfd,(struct sockaddr *)&cliaddr,&len))<0){
@@ -162,13 +159,14 @@ int main(int argc, char **argv){
                 int fd_dir;
                 int count=0;
                 char dir_element[DIM_BUFF];
+                char *nestedFile;
                 DIR *dir, *dir2;
                 struct dirent * dd, * dd2;
                 
 				printf("Dentro il figlio, pid=%i\n", getpid());
-				/* non c'è più il ciclo perchè viene creato un nuovo figlio */
-				/* per ogni richiesta */
-				if (read(connfd, &nome_dir, sizeof(nome_dir))<=0)
+
+				for (;;){
+					if (read(connfd, &nome_dir, sizeof(nome_dir))<=0)
 				{ perror("read"); break; }
 
 				printf("Richiesto direttorio %s\n", nome_dir);
@@ -198,8 +196,21 @@ int main(int argc, char **argv){
                                             printf("Trovata directory %s\n",dd2->d_name);
                                         }
                                         else{
-                                            
+                                            nestedFile= dd2->d_name;
                                             printf("Trovato file %s\n",dd2->d_name);
+                                            printf("Leggo e invio il file richiesto\n");
+                                            write(connfd,"S",1);
+                                            /*fd_file= open(dd2->d_name, O_RDONLY);
+                                            while((nread=read(fd_file, buff, sizeof(buff)))>0){
+                                            if ((nwrite=write(connfd, buff, nread))<0)
+                                            {perror("write"); break;}
+                                            }*/
+                                            write(connfd, nestedFile, strlen(nestedFile)+1);
+                                            
+                                            /* invio al client segnale di terminazione: zero binario */
+                                            write(connfd, &zero, 1);
+                                            close(fd_file);
+                                            
                                         }
                                 //strcpy(buff,dd2->d_name);
                                 //write(connfd,buff,sizeof(buff);
@@ -207,10 +218,11 @@ int main(int argc, char **argv){
                                 
                                     }
                                 }
-                                
+                                 
                             }
                                 else{
                                     printf("Errore\n");
+                                     write(connfd,"N",1);
                                 }
                                 closedir(dir2);
                             }
@@ -223,57 +235,12 @@ int main(int argc, char **argv){
                     }
                     closedir(dir);
                 }
-				/*if (dir==NULL){
-					printf("direttorio inesistente\n"); 
-					write(connfd, "N", 1);
-				}
-				else{
-					//write(connfd, "S", 1);
-                    printf("S");
-					// TODO:nome dei file nei dir di II liv
-                   while ((dd = readdir(dir)) != NULL){
-                    dir2=opendir(dd->d_name);
-                    if((dd2=readdir(dir2))!=NULL){
-                        
-                    printf("Trovato il direttorio %s\n", dd2-> d_name);
-                    }
-                    else{
-                        printf("%s: Questo è un file\n",dd2->d_name);
-                    }
-                    closedir(dir2);
-                    //write(connfd,dd->d_name,sizeof((dd->d_name)));
-                   /*dir2=opendir(dd-> d_name);
-                   if (dir2==NULL){
-					printf("Trovato il file %s\n", dd-> d_name); 
-                    }
-                    else{
-                        printf("Trovato il direttorio %s\n", dd-> d_name);
-                        while ((dd2 = readdir(dir2)) != NULL){
-                            printf("Trovato elemento %s\n", dd2-> d_name);
-                        }
-                    }
-                    count++;
-                    }
-                    /*Conta anche direttorio stesso e padre
-                    printf("Numero totale di file %d\n", count);
-                    
-                    
-					}
-					printf("Terminato invio file\n");
-					/* non è più necessario inviare al client un segnale di terminazione 
-					closedir(dir);
-				}*/
-
-				/*la connessione assegnata al figlio viene chiusa*/
-				printf("Figlio %i: termino\n", getpid());
+            
+				}//for
+				printf("Figlio %i: chiudo connessione e termino\n", getpid());
+				close(connfd);
 				exit(0);
-			}//figlio-fork
-			/* padre chiude la socket dell'operazione */
-			shutdown(connfd,0);
-			shutdown(connfd,1);
-			close(connfd);
-            }
-		 /* fine gestione richieste di file */
+		} }/* fine gestione richieste di file */
 
 		/* GESTIONE RICHIESTE DI ELIMINAZIONE PAROLA ------------------------------------------ */
 		if (FD_ISSET(udpfd, &rset)){
