@@ -56,7 +56,7 @@ void gestore(int signo){
 int main(int argc, char **argv){
 	int  listenfd, connfd, udpfd, fd_file, nready, maxfdp1;
 	const int on = 1;
-	char buff[DIM_BUFF], nome_file[LENGTH_FILE_NAME], nome_dir[LENGTH_FILE_NAME];
+	char buff[DIM_BUFF], nome_file[LENGTH_FILE_NAME], n, nome_dir[LENGTH_FILE_NAME],nome_dir_livello_2[LENGTH_FILE_NAME];
     char *fn, *word;
 	fd_set rset;
 	int len, nread, nwrite, num = 0, ris, port;
@@ -173,15 +173,75 @@ int main(int argc, char **argv){
 
 				printf("Richiesto direttorio %s\n", nome_dir);
 				dir=opendir(nome_dir);
-				if (dir==NULL){
+                int len_dir=strlen(nome_dir);
+                if(dir!=NULL){
+//                     write(connfd,"S",1);
+                    while((dd=readdir(dir))!=NULL){
+//                         printf("%s\n",dd->d_name);
+                       if((strcmp(dd->d_name,".")!=0) && (strcmp(dd->d_name,"..")!=0))
+                        {   
+//                             printf("%s\n",dd->d_name);
+                            if(dd->d_type == DT_DIR){
+//                                 printf("opendir\n");
+                                strcpy(nome_dir_livello_2,nome_dir);
+                                strcat(nome_dir_livello_2,"/");
+                                strcat(nome_dir_livello_2, dd->d_name);
+                                printf("Apro directory: %s\n",nome_dir_livello_2);
+                                dir2=opendir(nome_dir_livello_2);
+                                if(dir2!=NULL){
+                                    printf("Secondo livello:\n");
+                                    while((dd2=readdir(dir2))!=NULL){
+                                    if((strcmp(dd2->d_name,".")!=0) && (strcmp(dd2->d_name,"..")!=0)){
+//                                         printf("\t%s\n",dd2->d_name);
+                                        if(dd2->d_type==DT_DIR){
+                                            
+                                            printf("Trovata directory %s\n",dd2->d_name);
+                                        }
+                                        else{
+                                            
+                                            printf("Trovato file %s\n",dd2->d_name);
+                                        }
+                                //strcpy(buff,dd2->d_name);
+                                //write(connfd,buff,sizeof(buff);
+//                                     }
+                                
+                                    }
+                                }
+                                
+                            }
+                                else{
+                                    printf("Errore\n");
+                                }
+                                closedir(dir2);
+                            }
+                            else{
+                                printf("File %s\n",dd->d_name);
+                                continue;
+                                
+                            }
+                        }
+                    }
+                    closedir(dir);
+                }
+				/*if (dir==NULL){
 					printf("direttorio inesistente\n"); 
 					write(connfd, "N", 1);
 				}
 				else{
 					//write(connfd, "S", 1);
+                    printf("S");
 					// TODO:nome dei file nei dir di II liv
                    while ((dd = readdir(dir)) != NULL){
-                    printf("Trovato il direttorio %s\n", dd-> d_name);
+                    dir2=opendir(dd->d_name);
+                    if((dd2=readdir(dir2))!=NULL){
+                        
+                    printf("Trovato il direttorio %s\n", dd2-> d_name);
+                    }
+                    else{
+                        printf("%s: Questo è un file\n",dd2->d_name);
+                    }
+                    closedir(dir2);
+                    //write(connfd,dd->d_name,sizeof((dd->d_name)));
                    /*dir2=opendir(dd-> d_name);
                    if (dir2==NULL){
 					printf("Trovato il file %s\n", dd-> d_name); 
@@ -191,30 +251,28 @@ int main(int argc, char **argv){
                         while ((dd2 = readdir(dir2)) != NULL){
                             printf("Trovato elemento %s\n", dd2-> d_name);
                         }
-                    }*/
+                    }
                     count++;
                     }
-                    /*Conta anche direttorio stesso e padre*/
+                    /*Conta anche direttorio stesso e padre
                     printf("Numero totale di file %d\n", count);
                     
                     
 					}
 					printf("Terminato invio file\n");
-					/* non è più necessario inviare al client un segnale di terminazione */
+					/* non è più necessario inviare al client un segnale di terminazione 
 					closedir(dir);
-				}
+				}*/
 
 				/*la connessione assegnata al figlio viene chiusa*/
 				printf("Figlio %i: termino\n", getpid());
-				shutdown(connfd,0);
-				shutdown(connfd,1);
-				close(connfd);
 				exit(0);
 			}//figlio-fork
 			/* padre chiude la socket dell'operazione */
-			/*shutdown(connfd,0);
+			shutdown(connfd,0);
 			shutdown(connfd,1);
-			close(connfd);*/
+			close(connfd);
+            }
 		 /* fine gestione richieste di file */
 
 		/* GESTIONE RICHIESTE DI ELIMINAZIONE PAROLA ------------------------------------------ */
