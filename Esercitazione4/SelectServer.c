@@ -278,6 +278,8 @@ int main(int argc, char **argv){
 			}
 			/*	Dopo la chiusura dei file il file originale va unlinkato e il nuovo file deve essere rinominato come il file originale
 				cosi' da prendere il suo posto nel file system? */
+			unlink(req->nome_file);
+			rename(temp, req->nome_file);
 			close(fi);
 			close(fout);
 
